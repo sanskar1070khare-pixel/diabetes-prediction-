@@ -1,1 +1,584 @@
-<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Diabetes Prediction</title><link rel="stylesheet" href="{{ url_for('static',filename='style.css') }}"></head><body><main class="container"><section class="card"><h1>Diabetes Prediction</h1><p class="note">Educational ML demonstration — not a medical diagnosis.</p>{% if error %}<div class="error">{{error}}</div>{% endif %}{% if prediction %}<div class="result"><h2>{{prediction}}</h2>{% if probability is not none %}<p>Model probability: {{ "%.2f"|format(probability*100) }}%</p>{% endif %}</div>{% endif %}<form action="/predict" method="post">{% for f in ["Pregnancies","Glucose","BloodPressure","SkinThickness","Insulin","BMI","DiabetesPedigreeFunction","Age"] %}<label>{{f}}<input name="{{f}}" type="number" step="any" required></label>{% endfor %}<button>Predict</button></form></section></main></body></html>
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <!-- =========================
+         BASIC PAGE SETTINGS
+    ========================== -->
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Diabetes Prediction System</title>
+
+
+    <!-- =========================
+         CSS
+    ========================== -->
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #e0f2fe, #f8fafc);
+            padding: 30px 15px;
+            color: #1e293b;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 950px;
+            margin: auto;
+        }
+
+        /* =========================
+           HEADER
+        ========================== */
+
+        .header {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .header h1 {
+            font-size: 36px;
+            color: #0f172a;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #64748b;
+            font-size: 16px;
+        }
+
+
+        /* =========================
+           MAIN CARD
+        ========================== */
+
+        .card {
+            background: white;
+            border-radius: 20px;
+            padding: 35px;
+            box-shadow: 0 15px 40px rgba(15, 23, 42, 0.12);
+        }
+
+
+        /* =========================
+           FORM
+        ========================== */
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group label {
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #334155;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 13px 15px;
+            border: 1px solid #cbd5e1;
+            border-radius: 10px;
+            font-size: 15px;
+            outline: none;
+            transition: 0.3s;
+        }
+
+        .form-group input:focus {
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+        }
+
+        .form-group small {
+            color: #94a3b8;
+            margin-top: 5px;
+            font-size: 12px;
+        }
+
+
+        /* =========================
+           BUTTON
+        ========================== */
+
+        .button-container {
+            margin-top: 30px;
+            text-align: center;
+        }
+
+        .predict-btn {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #2563eb, #1d4ed8);
+            color: white;
+            font-size: 17px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .predict-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(37, 99, 235, 0.25);
+        }
+
+
+        /* =========================
+           RESULT
+        ========================== */
+
+        .result {
+            margin-top: 30px;
+            padding: 25px;
+            border-radius: 15px;
+            text-align: center;
+            background: #f1f5f9;
+        }
+
+        .result h2 {
+            font-size: 27px;
+            margin-bottom: 12px;
+        }
+
+        .probability {
+            font-size: 22px;
+            font-weight: bold;
+            color: #2563eb;
+        }
+
+
+        /* =========================
+           ERROR
+        ========================== */
+
+        .error {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 10px;
+            background: #fee2e2;
+            color: #b91c1c;
+            text-align: center;
+            font-weight: 600;
+        }
+
+
+        /* =========================
+           INFORMATION SECTION
+        ========================== */
+
+        .info {
+            margin-top: 25px;
+            padding: 20px;
+            border-radius: 12px;
+            background: #eff6ff;
+        }
+
+        .info h3 {
+            margin-bottom: 10px;
+            color: #1d4ed8;
+        }
+
+        .info p {
+            line-height: 1.6;
+            color: #475569;
+            font-size: 14px;
+        }
+
+
+        /* =========================
+           FOOTER
+        ========================== */
+
+        .footer {
+            text-align: center;
+            margin-top: 25px;
+            color: #64748b;
+            font-size: 13px;
+        }
+
+
+        /* =========================
+           MOBILE RESPONSIVE
+        ========================== */
+
+        @media (max-width: 700px) {
+
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .card {
+                padding: 22px;
+            }
+
+            .header h1 {
+                font-size: 28px;
+            }
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+
+    <!-- =========================
+         MAIN CONTAINER
+    ========================== -->
+
+    <div class="container">
+
+
+        <!-- =========================
+             HEADER
+        ========================== -->
+
+        <div class="header">
+
+            <h1>🩺 Diabetes Prediction System</h1>
+
+            <p>
+                Machine Learning Based Diabetes Risk Prediction
+            </p>
+
+        </div>
+
+
+        <!-- =========================
+             FORM CARD
+        ========================== -->
+
+        <div class="card">
+
+            <form action="/predict" method="POST">
+
+
+                <!-- =========================
+                     INPUT FIELDS
+                ========================== -->
+
+                <div class="form-grid">
+
+
+                    <!-- Pregnancies -->
+
+                    <div class="form-group">
+
+                        <label for="Pregnancies">
+                            Pregnancies
+                        </label>
+
+                        <input
+                            type="number"
+                            id="Pregnancies"
+                            name="Pregnancies"
+                            min="0"
+                            step="1"
+                            placeholder="Enter number of pregnancies"
+                            required
+                        >
+
+                        <small>
+                            Number of pregnancies
+                        </small>
+
+                    </div>
+
+
+                    <!-- Glucose -->
+
+                    <div class="form-group">
+
+                        <label for="Glucose">
+                            Glucose
+                        </label>
+
+                        <input
+                            type="number"
+                            id="Glucose"
+                            name="Glucose"
+                            min="0"
+                            step="0.1"
+                            placeholder="Enter glucose level"
+                            required
+                        >
+
+                        <small>
+                            Plasma glucose concentration
+                        </small>
+
+                    </div>
+
+
+                    <!-- Blood Pressure -->
+
+                    <div class="form-group">
+
+                        <label for="BloodPressure">
+                            Blood Pressure
+                        </label>
+
+                        <input
+                            type="number"
+                            id="BloodPressure"
+                            name="BloodPressure"
+                            min="0"
+                            step="0.1"
+                            placeholder="Enter blood pressure"
+                            required
+                        >
+
+                        <small>
+                            Diastolic blood pressure
+                        </small>
+
+                    </div>
+
+
+                    <!-- Skin Thickness -->
+
+                    <div class="form-group">
+
+                        <label for="SkinThickness">
+                            Skin Thickness
+                        </label>
+
+                        <input
+                            type="number"
+                            id="SkinThickness"
+                            name="SkinThickness"
+                            min="0"
+                            step="0.1"
+                            placeholder="Enter skin thickness"
+                            required
+                        >
+
+                        <small>
+                            Triceps skin fold thickness
+                        </small>
+
+                    </div>
+
+
+                    <!-- Insulin -->
+
+                    <div class="form-group">
+
+                        <label for="Insulin">
+                            Insulin
+                        </label>
+
+                        <input
+                            type="number"
+                            id="Insulin"
+                            name="Insulin"
+                            min="0"
+                            step="0.1"
+                            placeholder="Enter insulin level"
+                            required
+                        >
+
+                        <small>
+                            2-Hour serum insulin
+                        </small>
+
+                    </div>
+
+
+                    <!-- BMI -->
+
+                    <div class="form-group">
+
+                        <label for="BMI">
+                            BMI
+                        </label>
+
+                        <input
+                            type="number"
+                            id="BMI"
+                            name="BMI"
+                            min="0"
+                            step="0.1"
+                            placeholder="Enter BMI"
+                            required
+                        >
+
+                        <small>
+                            Body Mass Index
+                        </small>
+
+                    </div>
+
+
+                    <!-- Diabetes Pedigree -->
+
+                    <div class="form-group">
+
+                        <label for="DiabetesPedigreeFunction">
+                            Diabetes Pedigree Function
+                        </label>
+
+                        <input
+                            type="number"
+                            id="DiabetesPedigreeFunction"
+                            name="DiabetesPedigreeFunction"
+                            min="0"
+                            step="0.001"
+                            placeholder="Enter pedigree value"
+                            required
+                        >
+
+                        <small>
+                            Diabetes hereditary risk score
+                        </small>
+
+                    </div>
+
+
+                    <!-- Age -->
+
+                    <div class="form-group">
+
+                        <label for="Age">
+                            Age
+                        </label>
+
+                        <input
+                            type="number"
+                            id="Age"
+                            name="Age"
+                            min="1"
+                            step="1"
+                            placeholder="Enter age"
+                            required
+                        >
+
+                        <small>
+                            Age in years
+                        </small>
+
+                    </div>
+
+                </div>
+
+
+                <!-- =========================
+                     PREDICT BUTTON
+                ========================== -->
+
+                <div class="button-container">
+
+                    <button
+                        type="submit"
+                        class="predict-btn"
+                    >
+                        🔍 Predict Diabetes Risk
+                    </button>
+
+                </div>
+
+            </form>
+
+
+            <!-- =========================
+                 PREDICTION RESULT
+            ========================== -->
+
+            {% if prediction %}
+
+            <div class="result">
+
+                <h2>
+                    Prediction: {{ prediction }}
+                </h2>
+
+                <div class="probability">
+
+                    Diabetes Probability:
+                    {{ probability }}%
+
+                </div>
+
+            </div>
+
+            {% endif %}
+
+
+            <!-- =========================
+                 ERROR MESSAGE
+            ========================== -->
+
+            {% if error %}
+
+            <div class="error">
+
+                {{ error }}
+
+            </div>
+
+            {% endif %}
+
+
+            <!-- =========================
+                 INFORMATION
+            ========================== -->
+
+            <div class="info">
+
+                <h3>
+                    About This Prediction
+                </h3>
+
+                <p>
+                    This system uses a machine learning model to estimate
+                    the probability of diabetes based on the information
+                    entered above. The probability is generated by the
+                    trained classification model and is intended for
+                    educational and demonstration purposes only.
+                </p>
+
+            </div>
+
+        </div>
+
+
+        <!-- =========================
+             FOOTER
+        ========================== -->
+
+        <div class="footer">
+
+            Diabetes Prediction Project |
+            Machine Learning &amp; Python
+
+        </div>
+
+    </div>
+
+
+</body>
+
+</html>

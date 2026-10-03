@@ -1,4 +1,4 @@
-```css
+css
 * {
     box-sizing: border-box;
 }
@@ -65,4 +65,4 @@ button {
         grid-template-columns: 1fr;
     }
 }
-```
+

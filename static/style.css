@@ -1,1 +1,68 @@
-*{box-sizing:border-box}body{margin:0;font-family:Arial;background:#f4f6f8}.container{width:min(900px,94%);margin:40px auto}.card{background:white;padding:30px;border-radius:14px;box-shadow:0 8px 30px #0001}form{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}label{display:flex;flex-direction:column;gap:7px;font-weight:bold}input{padding:11px;border:1px solid #ccc;border-radius:8px}button{grid-column:1/-1;padding:13px;border:0;border-radius:8px;font-weight:bold;cursor:pointer}.note{color:#555}.result,.error{padding:14px;margin:18px 0;border-radius:8px}@media(max-width:650px){form{grid-template-columns:1fr}}
+```css
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: Arial;
+    background: #f4f6f8;
+}
+
+.container {
+    width: min(900px, 94%);
+    margin: 40px auto;
+}
+
+.card {
+    background: white;
+    padding: 30px;
+    border-radius: 14px;
+    box-shadow: 0 8px 30px #0001;
+}
+
+form {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+}
+
+label {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    font-weight: bold;
+}
+
+input {
+    padding: 11px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+}
+
+button {
+    grid-column: 1 / -1;
+    padding: 13px;
+    border: 0;
+    border-radius: 8px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.note {
+    color: #555;
+}
+
+.result,
+.error {
+    padding: 14px;
+    margin: 18px 0;
+    border-radius: 8px;
+}
+
+@media (max-width: 650px) {
+    form {
+        grid-template-columns: 1fr;
+    }
+}
+```
